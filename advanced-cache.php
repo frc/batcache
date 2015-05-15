@@ -319,6 +319,7 @@ if ( in_array(
 		array(
 			'wp-app.php',
 			'xmlrpc.php',
+			'admin.php',
 		) ) )
 	return;
 
