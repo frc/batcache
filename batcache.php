@@ -8,8 +8,10 @@ Author URI: http://andyskelton.com/
 Version: 1.2
 */
 
+global $batcache;
+
 // Do not load if our advanced-cache.php isn't loaded
-if ( ! isset( $batcache ) || ! is_object($batcache) || ! method_exists( $wp_object_cache, 'incr' ) )
+if ( ! isset( $batcache ) || ! is_object($batcache) || ! function_exists('wp_cache_add') || ! function_exists('wp_cache_incr') )
 	return;
 
 $batcache->configure_groups();
