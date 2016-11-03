@@ -40,16 +40,16 @@ function vary_cache_on_function($function) {
 
 class batcache {
 	// This is the base configuration. You can edit these variables or move them into your wp-config.php file.
-	var $max_age =  300; // Expire batcache items aged this many seconds (zero to disable batcache)
+	var $max_age;  // Expire batcache items aged this many seconds (zero to disable batcache)
 
-	var $remote  =    0; // Zero disables sending buffers to remote datacenters (req/sec is never sent)
+	var $remote  = 0; // Zero disables sending buffers to remote datacenters (req/sec is never sent)
 
-	var $times   =    2; // Only batcache a page after it is accessed this many times... (two or more)
-	var $seconds =  120; // ...in this many seconds (zero to ignore this and use batcache immediately)
+	var $times;  // Only batcache a page after it is accessed this many times... (two or more)
+	var $seconds; //...in this many seconds (zero to ignore this and use batcache immediately)
 
 	var $group   = 'batcache'; // Name of memcached group. You can simulate a cache flush by changing this.
 
-	var $unique  = array(); // If you conditionally serve different content, put the variable values here.
+	var $unique; // If you conditionally serve different content, put the variable values here.
 
 	var $vary    = array(); // Array of functions for create_function. The return value is added to $unique above.
 
@@ -59,19 +59,30 @@ class batcache {
 	var $redirect_status = false; // This is set to the response code during a redirect.
 	var $redirect_location = false; // This is set to the redirect location.
 
-	var $uncached_headers = array('transfer-encoding'); // These headers will never be cached. Apply strtolower.
+	var $uncached_headers; // // These headers will never be cached. Apply strtolower.
 
-	var $debug   = true; // Set false to hide the batcache info <!-- comment -->
+	var $debug; // Set false to hide the batcache info <!-- comment -->
 
-	var $cache_control = true; // Set false to disable Last-Modified and Cache-Control headers
+	var $cache_control;  // Set false to disable Last-Modified and Cache-Control headers
 
 	var $cancel = false; // Change this to cancel the output buffer. Use batcache_cancel();
 
-	var $noskip_cookies = array( 'wordpress_test_cookie' ); // Names of cookies - if they exist and the cache would normally be bypassed, don't bypass it
+	var $noskip_cookies; // Names of cookies - if they exist and the cache would normally be bypassed, don't bypass it
 
 	var $genlock = false;
 	var $do = false;
-        var $query = '';
+    var $query = '';
+
+    function __construct () {
+        $this->max_age = getenv( 'CACHE_MAX_AGE' ) ?: 300;
+        $this->times = getenv( 'CACHE_TIMES' ) ?: 2;
+        $this->seconds = getenv( 'CACHE_SECONDS' ) ?: 120;
+        $this->unique = getenv( 'CACHE_UNIQUE' ) ? array(getenv( 'CACHE_UNIQUE' )) : array();
+        $this->uncached_headers = getenv( 'CACHE_UNCACHED_HEADERS' ) ? array(strtolower(getenv( 'CACHE_UNCACHED_HEADERS' ))) : array('transfer-encoding');
+        $this->debug = getenv( 'CACHE_DEBUG' ) ?: true;
+        $this->cache_control = getenv( 'CACHE_CONTROL' ) ?: true;
+        $this->noskip_cookies = getenv( 'CACHE_NOSKIP_COOKIES' ) ? array(getenv( 'CACHE_NOSKIP_COOKIES' )) : array( 'wordpress_test_cookie' );
+    }
 
 	function batcache( $settings ) {
 		if ( is_array( $settings ) ) foreach ( $settings as $k => $v )
@@ -355,6 +366,17 @@ if ( ! is_object( $wp_object_cache ) )
 /* Example: if your documents have a mobile variant (a different document served by the same URL) you must tell batcache about the variance. Otherwise you might accidentally cache the mobile version and serve it to desktop users, or vice versa.
 $batcache->unique['mobile'] = is_mobile_user_agent();
 */
+
+if (in_array('bot', $batcache->unique)) {
+    $bots = array('Googlebot','Bingbot','msnbot','Slurp','DuckDuckBot','YandexBot','Exabot','facebot','facebookexternalhit');
+    if (isset($_SERVER['HTTP_USER_AGENT'])) {
+        foreach($bots as $bot) {
+            if(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), strtolower($bot)) !== false) {
+                $batcache->unique['bot'] = true;
+            }
+        }
+    }
+}
 
 /* Example: never batcache for this host
 if ( $_SERVER['HTTP_HOST'] == 'do-not-batcache-me.com' )
