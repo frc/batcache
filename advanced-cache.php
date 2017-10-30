@@ -368,7 +368,7 @@ $batcache->unique['mobile'] = is_mobile_user_agent();
 */
 
 if (in_array('bot', $batcache->unique)) {
-    $bots = array('Googlebot','Bingbot','msnbot','Slurp','DuckDuckBot','YandexBot','Exabot','facebot','facebookexternalhit');
+    $bots = array('Googlebot','Bingbot','msnbot','Slurp','DuckDuckBot','YandexBot','Exabot','facebot','facebookexternalhit','heritrix');
     if (isset($_SERVER['HTTP_USER_AGENT'])) {
         foreach($bots as $bot) {
             if(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), strtolower($bot)) !== false) {
